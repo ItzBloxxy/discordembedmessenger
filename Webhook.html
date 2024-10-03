@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhook Embed Messenger</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            color: #fff;
+            overflow: hidden; /* Prevent scrollbars due to animated background */
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            overflow-y: auto; /* Allow scrolling when content exceeds height */
+            max-height: calc(100vh - 80px); /* Prevent container from exceeding viewport */
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type="text"],
+        textarea {
+            width: calc(100% - 24px); /* Adjust width to account for padding */
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box; /* Include padding in width calculation */
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            transition: background 0.3s, border 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            background-color: rgba(255, 255, 255, 0.3);
+            outline: none;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            margin-top: 10px;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        #preview {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid #ddd;
+            text-align: left;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .preview-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 1.5rem;
+        }
+
+        .preview-description {
+            font-size: 1rem;
+            color: #ddd;
+            margin-bottom: 10px;
+        }
+
+        .embed {
+            border-left: 8px solid; /* Color will be set dynamically */
+            padding-left: 10px;
+            margin: 10px 0;
+            background-color: #1a1a1a;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .color-options {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .color-options button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+
+        .color-options button:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-options button {
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .theme-options button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Discord Webhook Messenger</h1>
+        <input type="text" id="webhookUrl" placeholder="Enter your Webhook URL" />
+        <input type="text" id="embedTitle" placeholder="Embed Title" oninput="updatePreview()" />
+        <textarea id="embedDescription" placeholder="Embed Description" oninput="updatePreview()"></textarea>
+        <textarea id="message" placeholder="Message" oninput="updatePreview()"></textarea>
+
+        <div class="color-options">
+            <button style="background-color: #ff0000;" onclick="setEmbedColor('rgb(255, 0, 0)')"></button>
+            <button style="background-color: #00ff00;" onclick="setEmbedColor('rgb(0, 255, 0)')"></button>
+            <button style="background-color: #0000ff;" onclick="setEmbedColor('rgb(0, 0, 255)')"></button>
+            <button style="background-color: #ffff00;" onclick="setEmbedColor('rgb(255, 255, 0)')"></button>
+            <button style="background-color: #ff00ff;" onclick="setEmbedColor('rgb(255, 0, 255)')"></button>
+            <button style="background-color: #00ffff;" onclick="setEmbedColor('rgb(0, 255, 255)')"></button>
+            <button style="background-color: #ff7f50;" onclick="setEmbedColor('rgb(255, 127, 80)')"></button>
+            <button style="background-color: #7fffd4;" onclick="setEmbedColor('rgb(127, 255, 212)')"></button>
+            <button style="background-color: #ff69b4;" onclick="setEmbedColor('rgb(255, 105, 180)')"></button>
+        </div>
+
+        <button onclick="sendWebhookMessage()">Send Message</button>
+
+        <div id="preview">
+            <div class="embed" id="embed">
+                <div class="preview-title" id="previewTitle">Your Embed Title</div>
+                <div class="preview-description" id="previewDescription">Your embed description will appear here.</div>
+            </div>
+            <div id="previewMessage">Your message content will appear here.</div>
+        </div>
+    </div>
+
+    <script>
+        // Load theme from LocalStorage on page load
+        window.onload = function () {
+            const savedGradient = localStorage.getItem('gradientTheme');
+            if (savedGradient) setGradient(savedGradient);
+        };
+
+        // Function to set gradients live
+        function setGradient(gradientClass) {
+            document.body.className = gradientClass;
+            localStorage.setItem('gradientTheme', gradientClass);
+        }
+
+        // Function to set embed color from the mini menu
+        function setEmbedColor(color) {
+            const embedElement = document.getElementById('embed');
+            embedElement.style.borderLeftColor = color; // Set left border color for the embed
+        }
+
+        // Update the preview as user types
+        function updatePreview() {
+            const title = document.getElementById('embedTitle').value || "Your Embed Title";
+            const description = document.getElementById('embedDescription').value || "Your embed description will appear here.";
+            const message = document.getElementById('message').value || "Your message content will appear here.";
+
+            document.getElementById('previewTitle').textContent = title;
+            document.getElementById('previewDescription').textContent = description;
+            document.getElementById('previewMessage').textContent = message;
+        }
+
+        // Function to send the webhook message without any requirements
+        function sendWebhookMessage() {
+            const webhookUrl = document.getElementById('webhookUrl').value;
+            const message = document.getElementById('message').value;
+            const embedTitle = document.getElementById('embedTitle').value;
+            const embedDescription = document.getElementById('embedDescription').value;
+            const embedColor = document.getElementById('embed').style.borderLeftColor; // Get the embed color
+
+            // Convert the RGB/RGBA color to a hexadecimal number
+            const hexColor = rgbToHex(embedColor);
+
+            // Prepare the payload
+            const payload = {
+                content: message || null, // Allow sending without content
+                embeds: []
+            };
+
+            // If embed title or description are filled, add embed to payload
+            if (embedTitle || embedDescription) {
+                payload.embeds.push({
+                    title: embedTitle || "Your Embed Title",
+                    description: embedDescription || "Your embed description will appear here.",
+                    color: hexColor // Use the converted color
+                });
+            }
+
+            // Send message using Fetch API
+            fetch(webhookUrl, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Message sent successfully!');
+                } else {
+                    alert('Failed to send message. Please check the webhook URL.');
+                }
+            })
+            .catch(error => {
+                console.error('Error sending message:', error);
+                alert('An error occurred while sending the message.');
+            });
+        }
+
+        // Function to convert RGB/RGBA to Hex
+        function rgbToHex(rgb) {
+            // Extracting RGB values
+            const rgbValues = rgb.match(/\d+/g);
+            if (rgbValues) {
+                const r = parseInt(rgbValues[0]);
+                const g = parseInt(rgbValues[1]);
+                const b = parseInt(rgbValues[2]);
+                // Convert to hex
+                return (r << 16) + (g << 8) + b; // Return as integer
+            }
+            return 0; // Default color if conversion fails
+        }
+    </script>
+</body>
+
+</html>
